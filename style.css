@@ -1,15 +1,17 @@
 :root{--roxo:#7b0fa6;--amarelo:#ffb000}
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#fafafa;color:#222}
+body{margin:0;font-family:Arial;background:#fafafa;color:#222}
 header{background:var(--roxo);padding:20px 8%;display:flex;justify-content:space-between;align-items:center}
 .logo{width:150px}
-.top-btn,.cta{background:var(--amarelo);color:#321047;padding:15px 28px;border-radius:30px;font-weight:bold;text-decoration:none}
-.hero{min-height:85vh;padding:60px 8%;display:flex;align-items:center;gap:40px;background:linear-gradient(120deg,#5d087f,#a927d1);color:white}
-.hero-text{flex:1}
+.btn{background:var(--amarelo);color:#321047;padding:15px 25px;border-radius:30px;text-decoration:none;font-weight:bold}
+.hero{min-height:80vh;padding:60px 8%;display:flex;align-items:center;gap:40px;background:linear-gradient(120deg,#5d087f,#b52bd9);color:white}
+.texto,.imagem{flex:1}
 .hero h1{font-size:48px}
-.hero p{font-size:22px}
-.hero-image{flex:1}
-.hero-image img{width:100%;max-width:520px;border-radius:35px;box-shadow:0 20px 40px #0005}
-.pedido{text-align:center;padding:60px 8%}
+.imagem img{width:100%;max-width:500px;border-radius:30px;box-shadow:0 20px 40px #0005}
+.produtos{text-align:center;padding:50px 8%}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:25px}
+.card{background:white;padding:25px;border-radius:25px;box-shadow:0 10px 30px #0002}
+.card img{width:100%;border-radius:20px}
+.destaque{border:3px solid var(--amarelo)}
 footer{background:#22002f;color:white;text-align:center;padding:30px}
-@media(max-width:700px){.hero{flex-direction:column-reverse;text-align:center}.hero h1{font-size:34px}}
+@media(max-width:700px){.hero{flex-direction:column}.hero h1{font-size:34px}}
