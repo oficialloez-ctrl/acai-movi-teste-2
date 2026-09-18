@@ -1,15 +1,9 @@
 :root{--roxo:#7b0fa6;--amarelo:#ffb000}
-*{box-sizing:border-box}
 body{margin:0;font-family:Arial;background:#fafafa;color:#222}
-header{background:var(--roxo);padding:20px 8%;display:flex;justify-content:space-between;align-items:center}
-.logo{width:150px;border-radius:20px}
-button,.order a{background:var(--amarelo);color:#321047;padding:15px 25px;border-radius:30px;border:0;font-weight:bold;text-decoration:none}
-.hero{min-height:70vh;padding:60px 8%;display:flex;align-items:center;background:linear-gradient(90deg,#7b0fa6,#b52bd9);color:white}
-.hero h1{font-size:48px}
-.products,.premium,.order{padding:50px 8%;text-align:center}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:25px}
-.card{background:white;padding:30px;border-radius:25px;box-shadow:0 10px 30px #0002}
-.destaque{border:3px solid var(--amarelo)}
-.card b{font-size:30px;color:var(--roxo)}
-.whatsapp{position:fixed;right:25px;bottom:25px;background:#25d366;color:white;padding:18px 22px;border-radius:50px;text-decoration:none}
+header{background:var(--roxo);padding:20px;display:flex;justify-content:space-between}
+.logo{width:150px}
+button{background:var(--amarelo);padding:15px;border-radius:30px;border:0;font-weight:bold}
+.hero{padding:80px 8%;color:white;background:linear-gradient(90deg,#7b0fa6,#b52bd9)}
+.produto{max-width:400px;width:90%;border-radius:25px}
+section{text-align:center;padding:40px}
 footer{background:#22002f;color:white;padding:30px;text-align:center}
