@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import PricingTab from "./PricingTab";
+import "./pricing.css";
 const u=process.env.NEXT_PUBLIC_SUPABASE_URL;
 const k=process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const db=u&&k?createClient(u,k):null;
@@ -69,7 +71,7 @@ export default function AdminPage(){
  if(!db)return <main className="section wrap"><h1>Painel Açaí Moví</h1><div className="status error">Supabase ainda não configurado. Falta definir NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY na Vercel.</div><p><a href="/">Voltar à loja</a></p></main>;
  if(!user)return <main className="section wrap" style={{maxWidth:520}}><h1>Painel Açaí Moví</h1><div className="panel"><h2>Entrar</h2><div className="field"><label>E-mail</label><input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></div><div className="field"><label>Senha</label><input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></div><button disabled={busy} className="btn" onClick={()=>login()}>Entrar</button> <button disabled={busy} className="btn secondary" onClick={()=>login(true)}>Criar conta</button>{info&&<div className="status">{info}</div>}<p className="caption">O cadastro não concede automaticamente permissão de administrador.</p></div></main>;
  if(!admin)return <main className="section wrap"><h1>Painel Açaí Moví</h1><div className="status">Conta autenticada, mas ainda sem acesso de administrador. Peça ao responsável para cadastrar seu UUID na tabela admin_users do Supabase.<p><code>{user.id}</code></p></div><button className="btn secondary" onClick={()=>db.auth.signOut()}>Sair</button></main>;
- const menu=[["pedidos","Pedidos"],["config","Loja e horários"],["produtos","Produtos"],["adicionais","Adicionais"],["bairros","Bairros"]];
+ const menu=[["pedidos","Pedidos"],["config","Loja e horários"],["produtos","Produtos"],["adicionais","Adicionais"],["bairros","Bairros"],["precificacao","Precificação"]];
  const rows=tab==="produtos"?products:tab==="adicionais"?addons:areas;
  const changeRow=(id,field,value)=>{const set=tab==="produtos"?setProducts:tab==="adicionais"?setAddons:setAreas;set(old=>old.map(r=>r.id===id?{...r,[field]:value}:r));};
  return <main className="section wrap"><div className="line"><div><h1>Painel administrativo</h1><p className="muted">Açaí Moví • {user.email}</p></div><button className="btn secondary" onClick={()=>db.auth.signOut()}>Sair</button></div>
@@ -95,6 +97,7 @@ export default function AdminPage(){
     </div>)}
     <hr className="divider"/><h3>Novo item</h3><div className="grid-two"><div className="field"><label>Nome</label><input value={newName} onChange={e=>setNewName(e.target.value)}/></div><div className="field"><label>Valor (R$)</label><input type="number" min="0" step=".01" value={newPrice} onChange={e=>setNewPrice(e.target.value)}/></div></div><button className="btn" disabled={busy} onClick={add}>Adicionar</button>
   </div>}
+  {tab==="precificacao"&&<PricingTab db={db} products={products}/>} 
   <p className="caption">Alterações são gravadas no Supabase. Evite abrir pedidos reais antes de testar todas as operações.</p>
  </main>;
 }
