@@ -200,9 +200,9 @@ export default function PricingTab({db,products=[]}){
         <Field id="p-waste" label="Perda/desperdício do açaí" unit="%" value={settings.acai_waste_percent}
           onChange={v=>changeSetting("acai_waste_percent",v)}
           helper="Percentual extra sobre o custo do açaí usado por unidade." />
-        <Field id="p-margin" label="Margem de contribuição desejada" unit="%" value={settings.desired_margin_percent}
+        <Field id="p-margin" label="Margem estimada desejada" unit="%" value={settings.desired_margin_percent}
           onChange={v=>changeSetting("desired_margin_percent",v)}
-          helper="Meta de margem após os custos informados e taxas. Inicial: 30% (ajustável)." />
+          helper="Meta de margem após os custos, rateio de despesas fixas e taxas. Inicial: 30% (ajustável)." />
       </div>
       <button className="btn" disabled={!!saving} onClick={saveSettings}>{saving==="settings"?"Salvando...":"Salvar custos gerais"}</button>
     </div>
