@@ -46,12 +46,13 @@ export default function AdminPage(){
  }
  async function login(signUp=false){
    if(!db)return;setBusy(true);setInfo("");
-   const res=signUp?await db.auth.signUp({email,password}):await db.auth.signInWithPassword({email,password});
+   const res=signUp?await db.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin+"/admin"}}):await db.auth.signInWithPassword({email,password});
    setInfo(res.error?res.error.message:signUp?"Conta solicitada. Confirme seu e-mail e peça autorização de administrador.":"Autenticação realizada.");
    setBusy(false);
  }
  async function save(table,row){
-   setBusy(true);const {error}=await db.from(table).update(row).eq("id",row.id);
+   setBusy(true);const changes=table==="orders"?{status:row.status}:row;
+   const {error}=await db.from(table).update(changes).eq("id",row.id);
    setInfo(error?error.message:"Alteração salva.");setBusy(false);
    if(!error)refresh();
  }
