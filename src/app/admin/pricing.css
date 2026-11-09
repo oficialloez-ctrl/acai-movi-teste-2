@@ -1,0 +1,30 @@
+.pricing-stack{display:grid;gap:20px}
+.pricing-stack h3{font-size:23px;margin:0 0 8px}
+.pricing-stack h4{font-size:18px;margin:22px 0 12px}
+.pricing-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 20px;margin:20px 0}
+.pricing-field{margin:0;min-width:0}
+.pricing-field label{line-height:1.3}
+.pricing-input-row{display:flex;align-items:center;background:white;border:1px solid #d8cbe0;border-radius:11px;overflow:hidden}
+.pricing-input-row:focus-within{outline:2px solid #7b22aa;outline-offset:1px}
+.pricing-input-row>span{padding:12px 10px;color:#6b4682;font-size:14px;font-weight:700;min-width:47px;text-align:center;background:#f9f3fc;border-right:1px solid #e5d9ed}
+.pricing-field .pricing-input-row input{width:100%;min-width:0;border:0;outline:0;border-radius:0;padding:12px;background:transparent}
+.pricing-field small{display:block;margin-top:3px}
+.pricing-privacy{background:#f2e6f9;padding:9px 11px;border-radius:20px;color:#602383;font-size:12px;font-weight:bold;white-space:nowrap}
+.pricing-select{max-width:420px;margin-top:20px}
+.pricing-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:24px 0}
+.pricing-kpi{border:1px solid #eadff1;background:#faf6fc;border-radius:15px;padding:18px;display:flex;flex-direction:column;gap:9px;min-width:0}
+.pricing-kpi span{font-size:13px;color:#675771}
+.pricing-kpi strong{font-size:clamp(22px,2.6vw,30px);color:#462266}
+.pricing-kpi small{color:#776b82}
+.pricing-kpi.pricing-highlight{border:2px solid #8c48b5;background:#f7eefa}
+.pricing-kpi.pricing-highlight strong{color:#641b93}
+.pricing-kpi .pricing-negative{color:#aa243f}
+.pricing-breakdown{border:1px solid #eee2f2;border-radius:15px;padding:18px;margin:20px 0}
+.pricing-breakdown .line{padding:8px 0;border-bottom:1px solid #eee5f2;font-size:14px}
+.pricing-breakdown .line:last-child{border-bottom:0}
+.pricing-breakdown .pricing-total{font-size:17px;padding-top:16px}
+.pricing-scenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pricing-scenarios>div{padding:15px;border-radius:12px;border:1px solid #e7d8ee;display:flex;flex-direction:column;gap:8px}
+.pricing-scenarios span{font-size:13px;color:#695873}
+.pricing-scenarios strong{font-size:22px;color:#59207c}
+@media(max-width:760px){.pricing-fields,.pricing-kpis{grid-template-columns:1fr}.pricing-scenarios{grid-template-columns:1fr}}
