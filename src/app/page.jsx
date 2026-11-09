@@ -82,6 +82,9 @@ export default function Home(){
  function changeQty(id,diff){setCart(old=>old.map(x=>x.id===id?{...x,quantity:x.quantity+diff}:x).filter(x=>x.quantity>0));}
  async function finish(){
    if(!cart.length){setMessage("Adicione um produto ao pedido.");return;}
+   if(!backend){setMessage("Esta é uma versão de testes. Configure o Supabase antes de receber pedidos reais.");return;}
+   const digits=String(settings.whatsapp_number||"").replace(/\D/g,"");
+   if(digits.length<12){setMessage("Configure o WhatsApp oficial da loja no painel antes de receber pedidos.");return;}
    if(!open){setMessage("Pedidos fechados no momento.");return;}
    if(form.name.trim().length<2||form.phone.replace(/\D/g,"").length<10){setMessage("Informe nome e telefone com DDD.");return;}
    if(form.fulfillment==="delivery"&&(!area||form.address.trim().length<6)){setMessage("Escolha o bairro e informe rua e número.");return;}
@@ -102,10 +105,8 @@ export default function Home(){
      "Pagamento: "+form.payment
    ];
    const text=lines.join("\n");
-   const digits=String(settings.whatsapp_number||"").replace(/\D/g,"");
    try{await navigator.clipboard.writeText(text)}catch{}
-   if(digits.length>=12){window.open("https://wa.me/"+digits+"?text="+encodeURIComponent(text),"_blank","noopener,noreferrer");}
-   else{window.open("https://wa.me/message/KONPQZAX7CH2L1","_blank","noopener,noreferrer");}
+   window.location.assign("https://wa.me/"+digits+"?text="+encodeURIComponent(text));
    setMessage(backend?"Pedido registrado! Confirme o atendimento no WhatsApp. Resumo copiado para colar na conversa.":"Modo de demonstração: o pedido NÃO foi salvo. Resumo copiado; envie-o no WhatsApp para solicitar atendimento.");
    if(backend)setCart([]);
    setBusy(false);
