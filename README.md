@@ -1,38 +1,42 @@
-# Açaí Moví — nova infraestrutura
+# Açaí Moví — nova infraestrutura própria
+Recriado a partir do ZIP enviado, em uma branch separada, sem alterar a loja do amigo nem outros projetos.
 
-Esta versão foi preparada a partir do ZIP acai-movi-teste-2-main.zip, sem alterar o site original.
-
-## Ambientes
-- Vercel própria: https://vercel.com/oficialloez-3374/acai-movi-loez
-- Loja: https://acai-movi-loez.vercel.app
+## URLs
+- Loja de testes: https://acai-movi-loez.vercel.app
 - Painel: https://acai-movi-loez.vercel.app/admin
-- GitHub: branch nova-infra-vercel-supabase (a branch main foi preservada)
+- Vercel: https://vercel.com/oficialloez-3374/acai-movi-loez
+- Supabase: https://supabase.com/dashboard/project/pbdvhnmjinojopjeqyjn
 
-## Status
-- Next.js compilado e implantado na Vercel
-- Catálogo, imagens, adicionais, carrinho, cálculo de entrega por bairro e resumo para WhatsApp
-- Painel para itens, entregas, abertura, horários e estados de pedidos
-- SQL de Supabase com segurança RLS e cálculo de preços no banco
-- Projeto Supabase dedicado ainda não criado nem conectado
-- Conta de administrador ainda não configurada
-- Fluxo de pedido persistente ainda não testado
+## Infraestrutura confirmada
+- Projeto Vercel próprio (Next.js 16, Node 22), deploy de produção da branch nova-infra-vercel-supabase
+- Projeto Supabase próprio acai-movi-loez, região sa-east-1
+- Variáveis NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY na Vercel
+- Migrações aplicadas: supabase/schema.sql e supabase/security-hardening.sql
+- Segurança: RLS em todas as 6 tabelas, sem alertas dos advisors
+- Dados iniciais: 4 produtos, 13 complementos e 35 áreas de entrega
+- Loja FECHADA por padrão para não receber pedidos antes da homologação
+- Testes de banco: pedido fora do horário negado e preço recalculado no banco (ambos sem deixar registros)
 
-## Configuração do Supabase
-1. Criar projeto independente na organização escolhida, preferencialmente na região sa-east-1.
-2. Executar supabase/schema.sql APENAS no projeto novo.
-3. Adicionar NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY na Vercel para ambientes usados.
-4. Fazer novo deploy da branch.
-5. Abrir /admin, cadastrar e confirmar um e-mail.
-6. Com o UUID apresentado no painel e usando o editor SQL autorizado, execute:
-   insert into public.admin_users(user_id) values ('UUID-DO-USUARIO');
-7. Abrir /admin, configurar número oficial WhatsApp (código 55 + DDD + celular), validar preços, fretes e horários.
-8. Somente após testes reais, ativar "Aceitar pedidos".
+## Para autorizar o primeiro administrador
+1. No Supabase, Authentication > URL Configuration, configure **Site URL** = https://acai-movi-loez.vercel.app e permita https://acai-movi-loez.vercel.app/** em **Redirect URLs**.
+2. Abra https://acai-movi-loez.vercel.app/admin e clique em **Criar conta** com o e-mail que será o administrador. Confirme o e-mail.
+3. Se já entrou, o painel mostrará seu UUID; conceda acesso no SQL Editor do projeto NOVO:
+   insert into public.admin_users(user_id) values ('SEU-UUID');
+   Ou peça ao operador autorizado a executar esse comando; não cole senhas aqui.
+4. Entre no painel administrativo, confira o número oficial do WhatsApp (formato 55+DDD+número), preços, bairros, fretes e dias/horários.
+5. Teste um pedido completo e só então ative **Aceitar pedidos**. Até lá a loja permanece fechada.
 
-## Segurança e limitações
-- Nenhum pedido é persistido sem conexão e configuração do Supabase.
-- O link curto de WhatsApp antigo é usado somente como alternativa; confirme que pertence à loja.
-- O banco bloqueia leitura pública de pedidos e recalcula valores no servidor.
-- Antes de abrir a loja ao público, implementar mitigação anti-spam/bot e revisar consentimento/privacidade dos clientes.
-- Não há processamento automático de cartão/PIX; pagamento é apenas uma preferência registrada no pedido.
-- O ZIP não continha dados de pedidos anteriores nem exportação de um banco, então nenhuma informação do amigo foi migrada.
-- Nenhum outro projeto existente foi modificado.
+## Limitações atuais
+- O WhatsApp é aberto no aplicativo/site com o texto do pedido; não existe automação oficial da API do WhatsApp Business nem confirmação de pagamento.
+- Não há migração dos pedidos anteriores, pois o ZIP fornecido não continha banco de clientes/pedidos.
+- Não há testes E2E automatizados no navegador nesta etapa; o build da Vercel e os testes SQL foram concluídos.
+- Falta validação presencial da operação por administrador, proteção adicional anti-bot e política de privacidade antes de liberar ao público.
+- A nova loja usa outro endereço; acai-movi.vercel.app continua sob a configuração original de terceiros.
+
+## Arquivos importantes
+- src/app/page.jsx: loja, seleção de adicionais, carrinho e checkout.
+- src/app/admin/page.jsx: painel e login com Supabase Auth.
+- supabase/schema.sql: estrutura inicial e políticas.
+- supabase/security-hardening.sql: restrições finais, cálculo de horário no servidor e controle básico de abuso.
+
+**Não coloque chaves secretas no repositório ou em variáveis NEXT_PUBLIC_.**
