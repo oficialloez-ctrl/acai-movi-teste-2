@@ -76,7 +76,7 @@ function Field({id,label,value,onChange,placeholder,helper,unit="R$"}){
   </div>;
 }
 
-export default function PricingTab({db,products=[],addons=[]}){
+export default function PricingTab({db,products=[],addons=[],onCreateAddon,onSetAddonVisibility}){
   const [settings,setSettings]=useState(initialSettings);
   const [drafts,setDrafts]=useState({});
   const [addonCosts,setAddonCosts]=useState({});
@@ -89,7 +89,7 @@ export default function PricingTab({db,products=[],addons=[]}){
   const [error,setError]=useState("");
   const selectedProduct=products.find(p=>p.id===selectedId) || products[0];
   const draft=drafts[selectedProduct?.id] || emptyProfile;
-  const selectedAddons=productSelections[selectedProduct?.id]||[];
+  const selectedAddons=(productSelections[selectedProduct?.id]||[]).filter(id=>addons.some(a=>a.id===id&&a.pricing_visible!==false));
   const detailedAddons=useMemo(()=>selectedAddons.map(id=>({
     id,
     name:addons.find(a=>a.id===id)?.name||"Complemento",
@@ -170,7 +170,7 @@ export default function PricingTab({db,products=[],addons=[]}){
   async function saveSelection(){
     if(!selectedProduct)return;
     setNotice("");setError("");
-    const ids=productSelections[selectedProduct.id]||[];
+    const ids=selectedAddons;
     if(ids.length>selectedProduct.addons_limit||ids.some(id=>!addons.some(a=>a.id===id))){
       setError("Seleção de complementos inválida.");return;
     }
@@ -304,6 +304,7 @@ export default function PricingTab({db,products=[],addons=[]}){
     <AddonCostSection addons={addons} product={selectedProduct}
       costs={addonCosts} setCosts={setAddonCosts} selection={selectedAddons}
       onSelectionChange={updateSelection} onSaveCost={saveAddonCost}
+      onCreateAddon={onCreateAddon} onSetAddonVisibility={onSetAddonVisibility}
       onSaveSelection={saveSelection} saving={saving}/>
     {selectedProduct&&<div className="panel">
       <h3>4. Resultado da simulação</h3>
