@@ -40,3 +40,14 @@ Recriado a partir do ZIP enviado, em uma branch separada, sem alterar a loja do 
 - supabase/security-hardening.sql: restrições finais, cálculo de horário no servidor e controle básico de abuso.
 
 **Não coloque chaves secretas no repositório ou em variáveis NEXT_PUBLIC_.**
+
+
+## Complementos na precificação (atualização)
+Na aba **Precificação**, seção de complementos:
+- **Adicionar complemento** cria o item no cadastro central, com preço de venda R$ 0 e `is_active=false`, para não aparecer automaticamente no cardápio de clientes. É possível ativá-lo e ajustar o preço depois na aba **Adicionais**.
+- **Retirar** apenas coloca `addons.pricing_visible=false`, ocultando-o da precificação sem apagar custos, pedidos, seleções anteriores nem alterar a visibilidade no cardápio.
+- **Ver removidos / Restaurar** permite recuperá-lo a qualquer momento.
+- Complementos ocultos ficam fora do custo estimado e da seleção de novos cenários enquanto estiverem ocultos. Se já estavam selecionados anteriormente, a configuração histórica fica guardada até nova gravação da seleção.
+- A migração SQL necessária está em `supabase/pricing_addon_visibility.sql` e preserva os 13 complementos existentes.
+
+*Não confundir "Retirar da precificação" com "desativar no cardápio" na aba Adicionais.*
