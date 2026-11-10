@@ -68,6 +68,34 @@ export default function AdminPage(){
    setInfo(error?error.message:"Item criado.");setBusy(false);
    if(!error){setNewName("");setNewPrice("");refresh();}
  }
+ async function addPricingAddon(rawName){
+   const name=String(rawName||"").trim().replace(/\s+/g," ");
+   if(name.length<2||name.length>80)return {ok:false,message:"Informe um nome entre 2 e 80 caracteres."};
+   const existing=addons.find(a=>a.name.toLocaleLowerCase("pt-BR")===name.toLocaleLowerCase("pt-BR"));
+   if(existing){
+     return {ok:false,message:existing.pricing_visible===false?
+       "Esse complemento já existe. Use a opção Restaurar para voltar a exibi-lo.":
+       "Já existe um complemento com este nome."};
+   }
+   const maxOrder=Math.max(0,...addons.map(a=>Number(a.sort_order)||0));
+   const {data,error}=await db.from("addons").insert({
+     name,price:0,is_active:false,pricing_visible:true,sort_order:maxOrder+1
+   }).select("*").single();
+   if(error)return {ok:false,message:error.code==="23505"?
+      "Já existe um complemento com este nome. Atualize a página para conferir.":
+      "Não foi possível cadastrar: "+error.message};
+   setAddons(old=>[...old,data]);
+   return {ok:true,message:"Complemento cadastrado para precificação. Ele só aparecerá para os clientes se for ativado na aba Adicionais."};
+ }
+ async function setPricingAddonVisibility(id,visible){
+   if(!addons.some(a=>a.id===id))return {ok:false,message:"Complemento não encontrado. Atualize a página."};
+   const {data,error}=await db.from("addons").update({pricing_visible:visible}).eq("id",id).select("*").single();
+   if(error)return {ok:false,message:"Não foi possível alterar a visibilidade: "+error.message};
+   setAddons(old=>old.map(a=>a.id===id?data:a));
+   return {ok:true,message:visible?
+      "Complemento restaurado na precificação. Os custos anteriores foram preservados.":
+      "Complemento ocultado apenas na precificação. Ele não será incluído nos cálculos enquanto estiver oculto. O cardápio e os custos existentes não foram modificados."};
+ }
  if(!db)return <main className="section wrap"><h1>Painel Açaí Moví</h1><div className="status error">Supabase ainda não configurado. Falta definir NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY na Vercel.</div><p><a href="/">Voltar à loja</a></p></main>;
  if(!user)return <main className="section wrap" style={{maxWidth:520}}><h1>Painel Açaí Moví</h1><div className="panel"><h2>Entrar</h2><div className="field"><label>E-mail</label><input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)}/></div><div className="field"><label>Senha</label><input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></div><button disabled={busy} className="btn" onClick={()=>login()}>Entrar</button> <button disabled={busy} className="btn secondary" onClick={()=>login(true)}>Criar conta</button>{info&&<div className="status">{info}</div>}<p className="caption">O cadastro não concede automaticamente permissão de administrador.</p></div></main>;
  if(!admin)return <main className="section wrap"><h1>Painel Açaí Moví</h1><div className="status">Conta autenticada, mas ainda sem acesso de administrador. Peça ao responsável para cadastrar seu UUID na tabela admin_users do Supabase.<p><code>{user.id}</code></p></div><button className="btn secondary" onClick={()=>db.auth.signOut()}>Sair</button></main>;
@@ -97,7 +125,7 @@ export default function AdminPage(){
     </div>)}
     <hr className="divider"/><h3>Novo item</h3><div className="grid-two"><div className="field"><label>Nome</label><input value={newName} onChange={e=>setNewName(e.target.value)}/></div><div className="field"><label>Valor (R$)</label><input type="number" min="0" step=".01" value={newPrice} onChange={e=>setNewPrice(e.target.value)}/></div></div><button className="btn" disabled={busy} onClick={add}>Adicionar</button>
   </div>}
-  {tab==="precificacao"&&<PricingTab db={db} products={products} addons={addons}/>} 
+  {tab==="precificacao"&&<PricingTab db={db} products={products} addons={addons} onCreateAddon={addPricingAddon} onSetAddonVisibility={setPricingAddonVisibility}/>} 
   <p className="caption">Alterações são gravadas no Supabase. Evite abrir pedidos reais antes de testar todas as operações.</p>
  </main>;
 }
