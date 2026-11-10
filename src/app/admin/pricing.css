@@ -56,3 +56,17 @@
 .pricing-selection-footer{margin-top:18px;flex-wrap:wrap}
 @media(max-width:800px){.addon-cost-grid{grid-template-columns:1fr}.pricing-selection-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.addon-cost-form{grid-template-columns:1fr}.pricing-selection-grid{grid-template-columns:1fr}}
+
+.pricing-management{background:#faf7fc;border:1px solid #e5d7ed;border-radius:14px;padding:18px;margin:20px 0}
+.pricing-management h4{margin:0 0 10px}
+.pricing-management-form{margin-top:16px}
+.pricing-management-form>label{display:block;font-size:14px;font-weight:700;margin-bottom:8px}
+.pricing-management-row{display:flex;gap:10px;align-items:center}
+.pricing-management-row input{min-width:0;flex:1;border:1px solid #dac9e6;background:white;border-radius:11px;padding:12px}
+.pricing-management-row button{white-space:nowrap}
+.pricing-hidden{margin-top:16px}
+.pricing-hidden-list{display:grid;gap:8px;margin-top:10px}
+.pricing-hidden-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;border:1px solid #e5d7ed;background:white;border-radius:10px}
+.pricing-hidden-item span{overflow-wrap:anywhere}
+.pricing-addon-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:520px){.pricing-management{padding:14px}.pricing-management-row{flex-direction:column;align-items:stretch}.pricing-management-row button{width:100%}.pricing-addon-actions{gap:6px}.pricing-addon-actions .btn{padding:8px 10px;font-size:12px}}
