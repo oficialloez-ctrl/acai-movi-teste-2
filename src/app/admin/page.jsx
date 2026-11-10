@@ -97,7 +97,7 @@ export default function AdminPage(){
     </div>)}
     <hr className="divider"/><h3>Novo item</h3><div className="grid-two"><div className="field"><label>Nome</label><input value={newName} onChange={e=>setNewName(e.target.value)}/></div><div className="field"><label>Valor (R$)</label><input type="number" min="0" step=".01" value={newPrice} onChange={e=>setNewPrice(e.target.value)}/></div></div><button className="btn" disabled={busy} onClick={add}>Adicionar</button>
   </div>}
-  {tab==="precificacao"&&<PricingTab db={db} products={products}/>} 
+  {tab==="precificacao"&&<PricingTab db={db} products={products} addons={addons}/>} 
   <p className="caption">Alterações são gravadas no Supabase. Evite abrir pedidos reais antes de testar todas as operações.</p>
  </main>;
 }
