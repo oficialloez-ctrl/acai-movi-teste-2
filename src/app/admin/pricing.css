@@ -28,3 +28,31 @@
 .pricing-scenarios span{font-size:13px;color:#695873}
 .pricing-scenarios strong{font-size:22px;color:#59207c}
 @media(max-width:760px){.pricing-fields,.pricing-kpis{grid-template-columns:1fr}.pricing-scenarios{grid-template-columns:1fr}}
+
+
+.pricing-regulator{margin:18px 0;padding:17px;border:1px solid #dfc9eb;border-radius:16px;background:#faf5fd}
+.pricing-regulator .line{align-items:center;flex-wrap:wrap}
+.pricing-slider-controls{display:flex;gap:12px;align-items:center;margin:12px 0}
+.pricing-slider-controls input[type="range"]{width:100%;flex:1;accent-color:#7922a8;cursor:pointer}
+.pricing-slider-controls button{min-width:42px;font-size:20px;padding:8px 12px}
+.pricing-adjusted{margin:18px 0 6px}
+.addon-cost-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
+.addon-cost-row{border:1px solid #e5d7ed;border-radius:14px;overflow:hidden;background:#fff}
+.addon-cost-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px}
+.addon-cost-name{display:flex;flex-direction:column;gap:5px;min-width:0}
+.addon-cost-name strong{overflow-wrap:anywhere}
+.addon-cost-name small{font-size:12px;color:#716580}
+.addon-cost-edit{white-space:nowrap;padding:9px 12px}
+.addon-cost-form{padding:15px;background:#faf6fc;border-top:1px solid #ecdff3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.addon-cost-form label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:700}
+.addon-cost-form input,.addon-cost-form select{background:white;width:100%;min-width:0;border:1px solid #dac9e6;border-radius:10px;padding:11px}
+.addon-cost-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:700;color:#59247a}
+.pricing-selection-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:18px}
+.pricing-selection-item{cursor:pointer;display:flex;align-items:flex-start;gap:11px;padding:12px;border:1px solid #e5d7ed;border-radius:12px}
+.pricing-selection-item.active{border-color:#6a258e;background:#f5e8fb}
+.pricing-selection-item input{margin-top:4px;accent-color:#6a258e}
+.pricing-selection-item span{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
+.pricing-selection-item small{color:#716580;font-size:12px}
+.pricing-selection-footer{margin-top:18px;flex-wrap:wrap}
+@media(max-width:800px){.addon-cost-grid{grid-template-columns:1fr}.pricing-selection-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.addon-cost-form{grid-template-columns:1fr}.pricing-selection-grid{grid-template-columns:1fr}}
