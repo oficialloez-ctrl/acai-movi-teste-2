@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import AddonCostSection, { portionCost } from "./AddonCostSection";
 
 const REAL = new Intl.NumberFormat("pt-BR", {style:"currency", currency:"BRL"});
 const money = n => Number.isFinite(n) ? REAL.format(n) : "—";
@@ -23,7 +24,7 @@ const toDraft = record => ({
 });
 const roundUp50 = value => Math.ceil((value - 0.0000001)*2)/2;
 
-function calculate(settings, draft, product){
+function calculate(settings, draft, product, addonPortions=[]){
   const costKg=numeric(settings.acai_cost_per_kg);
   const fixed=numeric(settings.fixed_monthly_expenses);
   const units=numeric(settings.expected_monthly_cups);
@@ -31,7 +32,10 @@ function calculate(settings, draft, product){
   const loss=numeric(settings.acai_waste_percent);
   const margin=numeric(settings.desired_margin_percent);
   const grams=numeric(draft.acai_grams);
-  const toppings=numeric(draft.toppings_cost);
+  const detailed=addonPortions.length>0;
+  const toppings=detailed
+    ? addonPortions.reduce((sum,a)=>sum+(a.cost||0),0)
+    : numeric(draft.toppings_cost);
   const packing=numeric(draft.packaging_cost);
   const other=numeric(draft.other_unit_cost);
   const needed=[];
@@ -39,7 +43,8 @@ function calculate(settings, draft, product){
   if(fixed===null) needed.push("despesas fixas mensais (use 0 se não houver)");
   if(fixed>0 && (units===null || units<=0)) needed.push("previsão de copos vendidos por mês");
   if(grams===null) needed.push("gramas de açaí por unidade");
-  if(toppings===null) needed.push("custo médio dos complementos");
+  if(detailed && addonPortions.some(a=>a.cost===null)) needed.push("preço, quantidade de compra e porção de todos os complementos selecionados");
+  if(toppings===null) needed.push("custo médio dos complementos ou seleção detalhada de complementos");
   if(packing===null) needed.push("custo de embalagem");
   if(needed.length)return {ready:false,reason:"Preencha: "+needed.join(", ")+".",needed};
   if([costKg,fixed,fee,loss,margin,grams,toppings,packing,other].some(n=>n===null || !Number.isFinite(n) || n<0)
@@ -56,7 +61,7 @@ function calculate(settings, draft, product){
   const currentMargin=currentProfit===null?null:currentProfit/current*100;
   const breakEven= total/(1-rate);
   const suggestion=rate+margin/100<1?roundUp50(total/(1-rate-margin/100)):null;
-  return {ready:true,acai,desperdicio,fixo,total,fee,margin,current,currentProfit,currentMargin,breakEven,suggestion,
+  return {ready:true,acai,desperdicio,fixo,total,toppings,detailed,fee,margin,current,currentProfit,currentMargin,breakEven,suggestion,
     scenarios:[25,35,45].map(m=>({margin:m,price:rate+m/100<1?roundUp50(total/(1-rate-m/100)):null}))};
 }
 function Field({id,label,value,onChange,placeholder,helper,unit="R$"}){
@@ -71,9 +76,12 @@ function Field({id,label,value,onChange,placeholder,helper,unit="R$"}){
   </div>;
 }
 
-export default function PricingTab({db,products=[]}){
+export default function PricingTab({db,products=[],addons=[]}){
   const [settings,setSettings]=useState(initialSettings);
   const [drafts,setDrafts]=useState({});
+  const [addonCosts,setAddonCosts]=useState({});
+  const [productSelections,setProductSelections]=useState({});
+  const [adjustPercent,setAdjustPercent]=useState(0);
   const [selectedId,setSelectedId]=useState("");
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState("");
@@ -81,18 +89,29 @@ export default function PricingTab({db,products=[]}){
   const [error,setError]=useState("");
   const selectedProduct=products.find(p=>p.id===selectedId) || products[0];
   const draft=drafts[selectedProduct?.id] || emptyProfile;
-  const calc=useMemo(()=>calculate(settings,draft,selectedProduct),[settings,draft,selectedProduct]);
+  const selectedAddons=productSelections[selectedProduct?.id]||[];
+  const detailedAddons=useMemo(()=>selectedAddons.map(id=>({
+    id,
+    name:addons.find(a=>a.id===id)?.name||"Complemento",
+    cost:portionCost(addonCosts[id])
+  })),[selectedAddons,addons,addonCosts]);
+  const calc=useMemo(()=>calculate(settings,draft,selectedProduct,detailedAddons),[settings,draft,selectedProduct,detailedAddons]);
+  const adjustedPrice=calc.ready&&calc.suggestion!==null?Math.max(0.5,Math.round(calc.suggestion*(1+adjustPercent/100)*2)/2):null;
+  const adjustedProfit=adjustedPrice===null?null:adjustedPrice*(1-calc.fee/100)-calc.total;
+  const adjustedMargin=adjustedPrice===null?null:100*adjustedProfit/adjustedPrice;
 
   useEffect(()=>{
     if(!db){setError("A conexão com o Supabase não está disponível.");setLoading(false);return;}
     let alive=true;
     async function load(){
-      const [s,p]=await Promise.all([
+      const [s,p,c,selected]=await Promise.all([
         db.from("pricing_settings").select("*").eq("id",1).single(),
-        db.from("product_pricing").select("*")
+        db.from("product_pricing").select("*"),
+        db.from("addon_costs").select("*"),
+        db.from("pricing_product_addons").select("*")
       ]);
       if(!alive)return;
-      if(s.error||p.error){
+      if(s.error||p.error||c.error||selected.error){
         setError("Não foi possível carregar a precificação. Confira as permissões e as tabelas no Supabase.");
       }else{
         setSettings({
@@ -106,6 +125,17 @@ export default function PricingTab({db,products=[]}){
         const map={};
         for(const row of p.data||[])map[row.product_id]=toDraft(row);
         setDrafts(map);
+        const byAddon={};
+        for(const row of c.data||[])byAddon[row.addon_id]={
+          purchase_price:asInput(row.purchase_price),
+          package_quantity:asInput(row.package_quantity),
+          portion_quantity:asInput(row.portion_quantity),
+          unit:row.unit||"g"
+        };
+        setAddonCosts(byAddon);
+        const selections={};
+        for(const row of selected.data||[])selections[row.product_id]=row.addon_ids||[];
+        setProductSelections(selections);
       }
       setLoading(false);
     }
@@ -121,6 +151,36 @@ export default function PricingTab({db,products=[]}){
     if(!selectedProduct)return;
     setDrafts(old=>({...old,[selectedProduct.id]:{...emptyProfile,...old[selectedProduct.id],[key]:value}}));
     setNotice("");setError("");
+  }
+  function updateSelection(ids){
+    if(!selectedProduct)return;
+    setProductSelections(old=>({...old,[selectedProduct.id]:ids}));
+    setNotice("");setError("");
+  }
+  async function saveAddonCost(id,values){
+    setNotice("");setError("");setSaving("addon-"+id);
+    const {error:err}=await db.from("addon_costs").upsert({
+      addon_id:id,...values,updated_at:new Date().toISOString()
+    },{onConflict:"addon_id"});
+    setSaving("");
+    if(err){setError("Erro ao salvar complemento: "+err.message);return false;}
+    setNotice("Custo do complemento salvo. Preços de venda permanecem inalterados.");
+    return true;
+  }
+  async function saveSelection(){
+    if(!selectedProduct)return;
+    setNotice("");setError("");
+    const ids=productSelections[selectedProduct.id]||[];
+    if(ids.length>selectedProduct.addons_limit||ids.some(id=>!addons.some(a=>a.id===id))){
+      setError("Seleção de complementos inválida.");return;
+    }
+    setSaving("selection");
+    const {error:err}=await db.from("pricing_product_addons").upsert({
+      product_id:selectedProduct.id,addon_ids:ids,updated_at:new Date().toISOString()
+    },{onConflict:"product_id"});
+    setSaving("");
+    if(err){setError("Não foi possível salvar a seleção: "+err.message);return;}
+    setNotice("Complementos usados na simulação salvos para "+selectedProduct.name+".");
   }
   function validate(values,limits){
     const parsed={};
@@ -204,6 +264,15 @@ export default function PricingTab({db,products=[]}){
           onChange={v=>changeSetting("desired_margin_percent",v)}
           helper="Meta de margem após os custos, rateio de despesas fixas e taxas. Inicial: 30% (ajustável)." />
       </div>
+      <div className="pricing-regulator">
+        <div className="line"><label htmlFor="pricing-margin-slider"><strong>Regulador de margem</strong></label><strong>{settings.desired_margin_percent||"0"}%</strong></div>
+        <div className="pricing-slider-controls">
+          <button type="button" className="btn secondary" aria-label="Diminuir margem em 1%" onClick={()=>changeSetting("desired_margin_percent",String(Math.max(0,(Number(settings.desired_margin_percent)||0)-1)))}>−</button>
+          <input id="pricing-margin-slider" type="range" min="0" max="80" step="1" value={Math.min(80,Math.max(0,Number(settings.desired_margin_percent)||0))} onChange={e=>changeSetting("desired_margin_percent",e.target.value)}/>
+          <button type="button" className="btn secondary" aria-label="Aumentar margem em 1%" onClick={()=>changeSetting("desired_margin_percent",String(Math.min(80,(Number(settings.desired_margin_percent)||0)+1)))}>+</button>
+        </div>
+        <p className="caption">Arraste para aumentar ou diminuir a margem desejada; o cálculo é atualizado na hora. Clique em salvar para guardar essa meta.</p>
+      </div>
       <button className="btn" disabled={!!saving} onClick={saveSettings}>{saving==="settings"?"Salvando...":"Salvar custos gerais"}</button>
     </div>
     <div className="panel">
@@ -219,9 +288,9 @@ export default function PricingTab({db,products=[]}){
         <Field id="p-grams" unit="g" label="Quantidade de açaí na unidade"
           value={draft.acai_grams} onChange={v=>changeDraft("acai_grams",v)}
           helper="Informe gramas de açaí utilizadas, não a capacidade do copo em ml." />
-        <Field id="p-toppings" label="Custo médio dos complementos" value={draft.toppings_cost}
+        <Field id="p-toppings" label="Custo médio manual dos complementos" value={draft.toppings_cost}
           onChange={v=>changeDraft("toppings_cost",v)}
-          helper={"Total dos complementos inclusos em "+selectedProduct.name+" (até "+selectedProduct.addons_limit+")."} />
+          helper={"Usado somente se não houver complementos selecionados abaixo, para evitar custo duplicado."} />
         <Field id="p-package" label="Copo, tampa, colher e embalagem" value={draft.packaging_cost}
           onChange={v=>changeDraft("packaging_cost",v)}
           helper="Some o custo do copo, tampa, colher, etiqueta, sacola etc." />
@@ -232,8 +301,12 @@ export default function PricingTab({db,products=[]}){
       <button className="btn" disabled={!!saving} onClick={saveProfile}>{saving==="profile"?"Salvando...":"Salvar custos desta unidade"}</button></>
       :<p className="small">Cadastre um produto na aba Produtos antes de usar o simulador.</p>}
     </div>
+    <AddonCostSection addons={addons} product={selectedProduct}
+      costs={addonCosts} setCosts={setAddonCosts} selection={selectedAddons}
+      onSelectionChange={updateSelection} onSaveCost={saveAddonCost}
+      onSaveSelection={saveSelection} saving={saving}/>
     {selectedProduct&&<div className="panel">
-      <h3>3. Resultado da simulação</h3>
+      <h3>4. Resultado da simulação</h3>
       {!calc.ready?<div className="status">{calc.reason}</div>:<>
         <div className="pricing-kpis">
           <div className="pricing-kpi"><span>Custo estimado por unidade</span><strong>{money(calc.total)}</strong></div>
@@ -250,12 +323,27 @@ export default function PricingTab({db,products=[]}){
         <div className="pricing-breakdown">
           <div className="line"><span>Açaí utilizado</span><strong>{money(calc.acai)}</strong></div>
           <div className="line"><span>Perdas do açaí</span><strong>{money(calc.desperdicio)}</strong></div>
-          <div className="line"><span>Complementos</span><strong>{money(numeric(draft.toppings_cost))}</strong></div>
+          <div className="line"><span>Complementos {calc.detailed?"(selecionados)":"(média manual)"}</span><strong>{money(calc.toppings)}</strong></div>
           <div className="line"><span>Embalagem</span><strong>{money(numeric(draft.packaging_cost))}</strong></div>
           <div className="line"><span>Outros custos variáveis</span><strong>{money(numeric(draft.other_unit_cost))}</strong></div>
           <div className="line"><span>Rateio das despesas fixas</span><strong>{money(calc.fixo)}</strong></div>
           <div className="line pricing-total"><strong>Custo unitário estimado</strong><strong>{money(calc.total)}</strong></div>
           <div className="line"><span>Preço mínimo de equilíbrio, considerando taxa de {settings.payment_fee_percent}%</span><strong>{money(calc.breakEven)}</strong></div>
+        </div>
+        <div className="pricing-regulator">
+          <div className="line"><label htmlFor="pricing-adjust-slider"><strong>Ajuste de preço para cima ou para baixo</strong></label><strong>{adjustPercent>0?"+":""}{adjustPercent}%</strong></div>
+          <div className="pricing-slider-controls">
+            <button type="button" className="btn secondary" aria-label="Reduzir preço em 5 pontos percentuais" onClick={()=>setAdjustPercent(v=>Math.max(-40,v-5))}>−</button>
+            <input id="pricing-adjust-slider" type="range" min="-40" max="50" step="5" value={adjustPercent} onChange={e=>setAdjustPercent(Number(e.target.value))}/>
+            <button type="button" className="btn secondary" aria-label="Aumentar preço em 5 pontos percentuais" onClick={()=>setAdjustPercent(v=>Math.min(50,v+5))}>+</button>
+          </div>
+          <div className="pricing-kpis pricing-adjusted">
+            <div className="pricing-kpi"><span>Preço simulado após ajuste</span><strong>{adjustedPrice===null?"Inviável":money(adjustedPrice)}</strong></div>
+            <div className="pricing-kpi"><span>Resultado estimado por unidade</span><strong className={adjustedProfit<0?"pricing-negative":""}>{adjustedProfit===null?"—":money(adjustedProfit)}</strong>
+              <small>Margem após ajuste: {adjustedMargin===null?"—":adjustedMargin.toFixed(1).replace(".",",")+"%"}</small></div>
+          </div>
+          {adjustedProfit!==null&&adjustedProfit<0&&<p className="status error">Atenção: este ajuste gera perda estimada por unidade.</p>}
+          <p className="caption">Ajusta o preço sugerido de −40% a +50% sem alterar o preço cadastrado na loja. O valor mostrado é arredondado para R$ 0,50 mais próximo.</p>
         </div>
         <h4>Outros cenários de margem</h4>
         <div className="pricing-scenarios">{calc.scenarios.map(s=><div key={s.margin}><span>Margem de {s.margin}%</span><strong>{s.price===null?"Inviável":money(s.price)}</strong></div>)}</div>
